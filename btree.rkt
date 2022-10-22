@@ -9,7 +9,26 @@
 (struct binary-tree
   ;; as the recursive data structure it should contain the keeping data, left node and right node.
   (data left right)
-  #:transparent) ;; it's just to see the values of current instance in the output
+  #:transparent
+  #:methods gen:stream
+  [(define (stream-empty? s)
+    (or (void? s) (eq? empty-stream s)))
+
+   (define (stream-first s)
+    (if (binary-tree? s)
+      (binary-tree-left s)
+      s))
+
+   (define (stream-rest s)
+    (if (binary-tree? s)
+      (if (and (void? (binary-tree-data s)) (void? (binary-tree-right s)))
+        empty-stream
+        (binary-tree
+          (binary-tree-right s)
+          (binary-tree-data s)
+          (void)))
+      s))]) ;; it's just to see the values of current instance in the output
+
 
 ;; Then we should implement the basic operations with out binary tree
 (define (bt-cons tree subtree)
