@@ -1,15 +1,10 @@
-;; We must specify the reader and the expander for our code.
 #lang racket
 
 
 (require syntax/parse/define racket/stream)
 
-;; Next we should decide what is identity element for our binary tree.
-;; The most convenient one for us is #<void>.
 
-;; Next step is defining the structure of the binary tree itself:
 (struct binary-tree
-  ;; as the recursive data structure it should contain the keeping data, left node and right node.
   (data left right)
   #:transparent
   #:methods gen:stream
@@ -44,10 +39,9 @@
               (binary-tree-right s)
               (binary-tree-data s)
               (void)))])
-      s))]) ;; it's just to see the values of current instance in the output
+      s))])
 
 
-;; Then we should implement the basic operations with out binary tree
 (define (bt-cons tree subtree)
   (cond
     [(not (binary-tree? tree))
@@ -98,15 +92,6 @@
     (lambda (x) (not (stream? x)))
     (stream->list t)))
 
-
-;;; (define-syntax-parser define-binary-tree-op
-;;;   [(define-binary-tree-op op:id)
-;;;   #'(lambda (f t)
-;;;     (for/fold
-;;;       ([tree (void)])
-;;;       ([v (op f
-;;;         (binary-tree->list t))])
-;;;       (binary-tree-cons tree v)))])
 
 (define-syntax define-binary-tree-op
   (syntax-rules ()
