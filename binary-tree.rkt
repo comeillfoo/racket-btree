@@ -51,9 +51,10 @@
         (void? (binary-tree-left tree))
         (void? (binary-tree-right tree)))
         [(list #t #t #t) (void)]
-        [(list #t _  #t) (binary-tree (binary-tree-left tree) (void) (void))]
-        [(list #t #t  _) (binary-tree (binary-tree-right tree) (void) (void))]
-        [(list _  _   _) tree])
+        [(list #t #f #t) (binary-tree (binary-tree-left tree) (void) (void))]
+        [(list #t #t #f) (binary-tree (binary-tree-right tree) (void) (void))]
+        [(list #f #t #t) (binary-tree-data tree)]
+        [(list  _  _  _) tree])
       tree))
 
   (define (bt-cons tree [subtree (void)])
@@ -106,9 +107,11 @@
 
 
   (define (binary-tree->list t)
-    (filter
-      (λ (x) (not (stream? x)))
-      (stream->list t)))
+    (if (binary-tree? t)
+      (filter
+       (λ (x) (and (not (stream? x)) (not (void? x))))
+       (stream->list t))
+      (raise-argument-error 'binary-tree->list "binary-tree?" t)))
 
 
   (define-syntax define-binary-tree-op
@@ -116,10 +119,10 @@
       [(define-binary-tree-op op func tree)
         (λ (func tree)
           (for/fold
-            ([tree (void)])
+            ([acc (void)])
             ([v (op func
             (binary-tree->list tree))])
-          (binary-tree-cons tree v)))]
+          (binary-tree-cons acc v)))]
       [(define-binary-tree-op op func init tree)
         (λ (func init tree)
           (op func init (binary-tree->list tree)))]))
@@ -153,6 +156,7 @@
         (if (void? data) left data)))
   
   ;;; # Property-based testing
+
   ;;; ## binary-tree-cons
   ;;; 1. testing operations with the neutral element
   (check-equal? (binary-tree-cons (void) (void)) (void)
@@ -165,10 +169,10 @@
     "property of x * e = x failed where x is number")
 
   (check-true (test-struct-identity '(1 2 3 4 5 6 7) (void)) 
-    "property of x * e = x failed where x is a complex structure")
+    "property of x * e = x failed where x is a complex data")
 
   (check-true (test-struct-identity (void) '(7 6 5 4 3 2 1)) 
-    "property of e * x = x failed where x is a complex structure")
+    "property of e * x = x failed where x is a complex data")
 
   (check-true (test-struct-identity (binary-tree 1 2 3) (void)) 
     "property of x * e = x failed where x is a tree")
@@ -186,6 +190,11 @@
     (binary-tree-cons '(1 2) (binary-tree-cons '(3 4) '(5 6)))
     (binary-tree-cons (binary-tree-cons '(1 2) '(3 4)) '(5 6))
     "property of a * (b * c) = (a * b) * c failed where a, b, c are complex data")
+
+  ;;; 3. total number of nodes in a perfect tree of height h is 2^(h + 1) - 1
+  (check-equal? (length (binary-tree->list (binary-tree 4 (void) (void))))                           1)
+  (check-equal? (length (binary-tree->list (binary-tree 1 2 3)))                                     3)
+  (check-equal? (length (binary-tree->list (binary-tree 1 (binary-tree 2 3 4) (binary-tree 5 6 7)))) 7)
 
   (check-equal?
     (binary-tree-cons
@@ -205,9 +214,9 @@
       '(8 9 10 11))
     "property of a * (b * c) = (a * b) * c failed where a is a tree and b, c are complex data")
   
-  ;;; Unit-tests
+  ;;; # Unit-tests
   
-  ;;; binary-tree-cons
+  ;;; ## binary-tree-cons
   (check-equal? (binary-tree-cons (binary-tree (void) (void) (void)) (void)) (void) "inalid tree not corrected")
   (check-equal? (binary-tree-cons (binary-tree 1 (void) (void)) 2) (binary-tree 1 2 (void)) "new element not in the left leaf")
   (check-equal? (binary-tree-cons (binary-tree 1 2 (void)) 3) (binary-tree 1 2 3) "new element not in the right leaf"))
