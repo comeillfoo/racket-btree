@@ -1,7 +1,6 @@
 #lang racket
 
 
-
 (module+ binary-tree
   (require syntax/parse/define racket/stream)
   (provide (except-out
@@ -127,5 +126,8 @@
   (define (binary-tree-remove v tree [func equal?])
     (binary-tree-filter
       (lambda (node) (not (func v node)))
-      tree))
-)
+      tree)))
+
+
+(module+ test
+  )
