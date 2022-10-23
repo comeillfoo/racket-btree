@@ -2,10 +2,10 @@
 
 
 (module+ binary-tree
-  (require syntax/parse/define racket/stream)
+  (require racket/stream)
   (provide (except-out
     (all-defined-out)
-    bt-cons define-binary-tree-op))
+    bt-cons define-binary-tree-op bt-transform))
 
   (struct binary-tree
     (data left right)
@@ -44,12 +44,25 @@
                 (void)))])
         s))])
 
+  (define (bt-transform tree)
+    (if (binary-tree? tree)
+      (match (list
+        (void? (binary-tree-data tree))
+        (void? (binary-tree-left tree))
+        (void? (binary-tree-right tree)))
+        [(list #t #t #t) (void)]
+        [(list #t _  #t) (binary-tree (binary-tree-left tree) (void) (void))]
+        [(list #t #t  _) (binary-tree (binary-tree-right tree) (void) (void))]
+        [(list _  _   _) tree])
+      tree))
 
   (define (bt-cons tree [subtree (void)])
     (cond
       [(not (binary-tree? tree))
-        (binary-tree tree subtree (void))]
-
+        (if (and (binary-tree? subtree) (void? (binary-tree-right subtree)))
+          (binary-tree tree (binary-tree-data subtree) (binary-tree-left subtree))
+          (binary-tree tree subtree (void)))]
+      
       [(void? (binary-tree-left tree))
         (binary-tree
           (binary-tree-data tree)
@@ -65,16 +78,16 @@
       [(not (binary-tree? (binary-tree-left tree)))
         (binary-tree
           (binary-tree-data tree)
-          (binary-tree
-            (binary-tree-left tree) subtree (void))
+          (binary-tree-cons
+            (binary-tree-left tree) subtree)
           (binary-tree-right tree))]
 
-      [(not (binary-tree? (binary-tree-right tree)))
-        (binary-tree
-          (binary-tree-data tree)
-          (binary-tree-left tree)
-          (binary-tree
-            (binary-tree-right tree) subtree (void)))]
+      ;;; [(not (binary-tree? (binary-tree-right tree)))
+      ;;;   (binary-tree
+      ;;;     (binary-tree-data tree)
+      ;;;     (binary-tree-left tree)
+      ;;;     (binary-tree
+      ;;;       (binary-tree-right tree) subtree (void)))]
       [else
         (binary-tree
           (binary-tree-data tree)
@@ -85,28 +98,30 @@
   (define (binary-tree-cons a d)
     (match (list (void? a) (void? d))
       [(list #t #t) (void)]
-      [(list #t #f) (bt-cons d)]
-      [(list #f #t) (bt-cons a)]
-      [(list #f #f) (bt-cons a d)]))
+      [(list #t #f) (bt-transform d)]
+      [(list #f #t) (bt-transform a)]
+      [(list #f #f) (bt-cons
+        (bt-transform a)
+        (bt-transform d))]))
 
 
   (define (binary-tree->list t)
     (filter
-      (lambda (x) (not (stream? x)))
+      (λ (x) (not (stream? x)))
       (stream->list t)))
 
 
   (define-syntax define-binary-tree-op
     (syntax-rules ()
       [(define-binary-tree-op op func tree)
-        (lambda (func tree)
+        (λ (func tree)
           (for/fold
             ([tree (void)])
             ([v (op func
             (binary-tree->list tree))])
           (binary-tree-cons tree v)))]
       [(define-binary-tree-op op func init tree)
-        (lambda (func init tree)
+        (λ (func init tree)
           (op func init (binary-tree->list tree)))]))
 
 
@@ -125,7 +140,7 @@
 
   (define (binary-tree-remove v tree [func equal?])
     (binary-tree-filter
-      (lambda (node) (not (func v node)))
+      (λ (node) (not (func v node)))
       tree)))
 
 
@@ -133,5 +148,67 @@
 
 (module+ test
   (require (submod ".." binary-tree) rackunit)
-  (check-equal? (binary-tree-cons (void) (void)) (void) "Property of monoid failed"))
+  (define (test-struct-identity data left)
+      (equal? (binary-tree-cons data left)
+        (if (void? data) left data)))
+  
+  ;;; # Property-based testing
+  ;;; ## binary-tree-cons
+  ;;; 1. testing operations with the neutral element
+  (check-equal? (binary-tree-cons (void) (void)) (void)
+    "property of e * e failed")
+
+  (check-true (test-struct-identity 1 (void))
+    "property of x * e = x failed where x is number")
+
+  (check-true (test-struct-identity (void) 1)
+    "property of x * e = x failed where x is number")
+
+  (check-true (test-struct-identity '(1 2 3 4 5 6 7) (void)) 
+    "property of x * e = x failed where x is a complex structure")
+
+  (check-true (test-struct-identity (void) '(7 6 5 4 3 2 1)) 
+    "property of e * x = x failed where x is a complex structure")
+
+  (check-true (test-struct-identity (binary-tree 1 2 3) (void)) 
+    "property of x * e = x failed where x is a tree")
+
+  (check-true (test-struct-identity (void) (binary-tree 1 2 3)) 
+    "property of e * x = x failed where x is a tree")
+
+  ;;; 2. testing associativity
+  (check-equal?
+    (binary-tree-cons 1 (binary-tree-cons 2 3))
+    (binary-tree-cons (binary-tree-cons 1 2) 3)
+    "property of a * (b * c) = (a * b) * c failed where a, b, c are numbers")
+
+  (check-equal?
+    (binary-tree-cons '(1 2) (binary-tree-cons '(3 4) '(5 6)))
+    (binary-tree-cons (binary-tree-cons '(1 2) '(3 4)) '(5 6))
+    "property of a * (b * c) = (a * b) * c failed where a, b, c are complex data")
+
+  (check-equal?
+    (binary-tree-cons
+      (binary-tree 1 2 3)
+      (binary-tree-cons 4 5))
+    (binary-tree-cons
+      (binary-tree-cons (binary-tree 1 2 3) 4)
+      5)
+    "property of a * (b * c) = (a * b) * c failed where a is a tree and b, c are numbers")
+
+  (check-equal?
+    (binary-tree-cons
+      (binary-tree '(1 2 3) '(3 4) '(5))
+      (binary-tree-cons '(6 7) '(8 9 10 11)))
+    (binary-tree-cons
+      (binary-tree-cons (binary-tree '(1 2 3) '(3 4) '(5)) '(6 7))
+      '(8 9 10 11))
+    "property of a * (b * c) = (a * b) * c failed where a is a tree and b, c are complex data")
+  
+  ;;; Unit-tests
+  
+  ;;; binary-tree-cons
+  (check-equal? (binary-tree-cons (binary-tree (void) (void) (void)) (void)) (void) "inalid tree not corrected")
+  (check-equal? (binary-tree-cons (binary-tree 1 (void) (void)) 2) (binary-tree 1 2 (void)) "new element not in the left leaf")
+  (check-equal? (binary-tree-cons (binary-tree 1 2 (void)) 3) (binary-tree 1 2 3) "new element not in the right leaf"))
 
