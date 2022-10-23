@@ -109,7 +109,7 @@
   (define (binary-tree->list t)
     (if (binary-tree? t)
       (filter
-       (λ (x) (and (not (stream? x)) (not (void? x))))
+       (λ (x) (not (or (and (stream? x) (stream-empty? x)) (void? x))))
        (stream->list t))
       (raise-argument-error 'binary-tree->list "binary-tree?" t)))
 
@@ -163,16 +163,16 @@
     "property of e * e failed")
 
   (check-true (test-struct-identity 1 (void))
-    "property of x * e = x failed where x is number")
+    "property of x * e = (x) failed where x is number")
 
   (check-true (test-struct-identity (void) 1)
-    "property of x * e = x failed where x is number")
+    "property of x * e = (x) failed where x is number")
 
   (check-true (test-struct-identity '(1 2 3 4 5 6 7) (void)) 
-    "property of x * e = x failed where x is a complex data")
+    "property of x * e = (x) failed where x is a complex data")
 
   (check-true (test-struct-identity (void) '(7 6 5 4 3 2 1)) 
-    "property of e * x = x failed where x is a complex data")
+    "property of e * x = (x) failed where x is a complex data")
 
   (check-true (test-struct-identity (binary-tree 1 2 3) (void)) 
     "property of x * e = x failed where x is a tree")
@@ -217,7 +217,72 @@
   ;;; # Unit-tests
   
   ;;; ## binary-tree-cons
-  (check-equal? (binary-tree-cons (binary-tree (void) (void) (void)) (void)) (void) "inalid tree not corrected")
-  (check-equal? (binary-tree-cons (binary-tree 1 (void) (void)) 2) (binary-tree 1 2 (void)) "new element not in the left leaf")
-  (check-equal? (binary-tree-cons (binary-tree 1 2 (void)) 3) (binary-tree 1 2 3) "new element not in the right leaf"))
+  (check-equal? (binary-tree-cons (binary-tree (void) (void) (void)) (void)) (void)
+    "inalid tree not corrected")
+  (check-equal? (binary-tree-cons (binary-tree 1 (void) (void)) 2) (binary-tree 1 2 (void))
+    "new element not in the left leaf")
+  (check-equal? (binary-tree-cons (binary-tree 1 2 (void)) 3) (binary-tree 1 2 3)
+    "new element not in the right leaf")
+  
+  ;;; ## binary-tree-remove
+  (check-equal? (binary-tree-remove 3 (binary-tree 1 3 3)) 1
+    "not all 3 removed")
+    
+  (check-false (member 3 (binary-tree->list (binary-tree-remove 3 (binary-tree 1 (binary-tree 3 4 5) 3))))
+    "not all 3 removed")
+    
+  (check-false (member '(1 2 3) (binary-tree->list (binary-tree-remove '(1 2 3) (binary-tree '(1 2 3) (binary-tree 3 4 5) 3))))
+    "not all '(1 2 3) removed")
+    
+  ;;; ## binary-tree-map
+  (check-equal?
+    (binary-tree->list
+      (binary-tree-map
+        (lambda (v) (add1 v))
+        (binary-tree 1 2 3)))
+    '(2 3 4)
+    "not all elements increased")
+  
+  (check-equal?
+    (binary-tree->list
+      (binary-tree-map
+        (lambda (v) (range v))
+        (binary-tree 1 2 3)))
+    '((0) (0 1) (0 1 2))
+    "not all elements increased")
+  
+  ;;; ## binary-tree-foldl
+  (check-equal?
+    (binary-tree-foldl
+      cons
+      '()
+      (binary-tree 2 1 (binary-tree 4 3 5)))
+    '(5 4 3 2 1)
+    "not folded in reverse-sorted list")
+
+  ;;; ## binary-tree-foldr
+  (check-equal?
+    (binary-tree-foldr
+      cons
+      '()
+      (binary-tree 2 1 (binary-tree 4 3 5)))
+    '(1 2 3 4 5)
+    "not folded in sorted list")
+    
+  ;;; ## binary-tree->list
+  (check-exn
+    exn:fail:contract?
+    (lambda ()
+      (binary-tree->list '()))
+    "type not checked")
+
+  (check-equal?
+    (binary-tree->list (binary-tree (void) (void) (void)))
+    '()
+    "type not checked")
+    
+  (check-equal?
+    (binary-tree->list (binary-tree 4 (binary-tree 2 1 3) 5))
+    '(1 2 3 4 5)
+    "not transferred inorder"))
 
