@@ -42,7 +42,7 @@
       s))])
 
 
-(define (bt-cons tree subtree)
+(define (bt-cons tree [subtree (void)])
   (cond
     [(not (binary-tree? tree))
       (binary-tree tree subtree (void))]
@@ -82,8 +82,8 @@
 (define (binary-tree-cons a d)
   (match (list (void? a) (void? d))
     [(list #t #t) (void)]
-    [(list #t #f) (bt-cons d (void))]
-    [(list #f #t) (bt-cons a (void))]
+    [(list #t #f) (bt-cons d)]
+    [(list #f #t) (bt-cons a)]
     [(list #f #f) (bt-cons a d)]))
 
 
