@@ -2,6 +2,8 @@
 #lang racket
 
 
+(require syntax/parse/define racket/stream)
+
 ;; Next we should decide what is identity element for our binary tree.
 ;; The most convenient one for us is #<void>.
 
@@ -97,20 +99,46 @@
     (stream->list t)))
 
 
-(require syntax/parse/define)
+;;; (define-syntax-parser define-binary-tree-op
+;;;   [(define-binary-tree-op op:id)
+;;;   #'(lambda (f t)
+;;;     (for/fold
+;;;       ([tree (void)])
+;;;       ([v (op f
+;;;         (binary-tree->list t))])
+;;;       (binary-tree-cons tree v)))])
+
+(define-syntax define-binary-tree-op
+  (syntax-rules ()
+    [(define-binary-tree-op op func tree)
+      (lambda (func tree)
+        (for/fold
+          ([tree (void)])
+          ([v (op func
+          (binary-tree->list tree))])
+        (binary-tree-cons tree v)))]
+    [(define-binary-tree-op op func init tree)
+      (lambda (func init tree)
+        (op func init (binary-tree->list tree)))]))
 
 
-(define-syntax-parser define-binary-tree-op
-  [(define-binary-tree-op op:id)
-  #'(lambda (f t)
-    (for/fold
-      ([tree (void)])
-      ([v (op f
-        (binary-tree->list t))])
-      (binary-tree-cons tree v)))])
+(define binary-tree-map
+  (define-binary-tree-op map func tree))
 
-(define binary-tree-map (define-binary-tree-op map))
-(define binary-tree-filter (define-binary-tree-op filter))
+(define binary-tree-filter
+  (define-binary-tree-op filter func tree))
+
+(define binary-tree-foldl
+  (define-binary-tree-op foldl func init tree))
+
+(define binary-tree-foldr
+  (define-binary-tree-op foldr func init tree))
 
 
-(provide (struct-out binary-tree) binary-tree-cons binary-tree-map binary-tree-filter)
+(provide
+  (struct-out binary-tree)
+  binary-tree-cons
+  binary-tree-map
+  binary-tree-filter
+  binary-tree-foldl
+  binary-tree-foldr)
