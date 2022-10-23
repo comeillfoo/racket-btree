@@ -76,12 +76,12 @@
           (binary-tree-left tree)
           subtree)]
 
-      [(not (binary-tree? (binary-tree-left tree)))
-        (binary-tree
-          (binary-tree-data tree)
-          (binary-tree-cons
-            (binary-tree-left tree) subtree)
-          (binary-tree-right tree))]
+      ;;; [(not (binary-tree? (binary-tree-left tree)))
+      ;;;   (binary-tree
+      ;;;     (binary-tree-data tree)
+      ;;;     (binary-tree-cons
+      ;;;       (binary-tree-left tree) subtree)
+      ;;;     (binary-tree-right tree))]
 
       ;;; [(not (binary-tree? (binary-tree-right tree)))
       ;;;   (binary-tree
@@ -155,7 +155,7 @@
       (equal? (binary-tree-cons data left)
         (if (void? data) left data)))
   
-  ;;; # Property-based testing
+  ;;; # Property-based tests
 
   ;;; ## binary-tree-cons
   ;;; 1. testing operations with the neutral element
@@ -191,11 +191,6 @@
     (binary-tree-cons (binary-tree-cons '(1 2) '(3 4)) '(5 6))
     "property of a * (b * c) = (a * b) * c failed where a, b, c are complex data")
 
-  ;;; 3. total number of nodes in a perfect tree of height h is 2^(h + 1) - 1
-  (check-equal? (length (binary-tree->list (binary-tree 4 (void) (void))))                           1)
-  (check-equal? (length (binary-tree->list (binary-tree 1 2 3)))                                     3)
-  (check-equal? (length (binary-tree->list (binary-tree 1 (binary-tree 2 3 4) (binary-tree 5 6 7)))) 7)
-
   (check-equal?
     (binary-tree-cons
       (binary-tree 1 2 3)
@@ -213,6 +208,11 @@
       (binary-tree-cons (binary-tree '(1 2 3) '(3 4) '(5)) '(6 7))
       '(8 9 10 11))
     "property of a * (b * c) = (a * b) * c failed where a is a tree and b, c are complex data")
+
+  ;;; 3. total number of nodes in a perfect tree of height h is 2^(h + 1) - 1
+  (check-equal? (length (binary-tree->list (binary-tree 4 (void) (void))))                           1)
+  (check-equal? (length (binary-tree->list (binary-tree 1 2 3)))                                     3)
+  (check-equal? (length (binary-tree->list (binary-tree 1 (binary-tree 2 3 4) (binary-tree 5 6 7)))) 7)
   
   ;;; # Unit-tests
   
