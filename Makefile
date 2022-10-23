@@ -25,7 +25,7 @@ lint: racket-lint
 racket-test:
 	$(RACO) $(TEST) $(RKTDIR)
 
-test: python-test racket-test
+test: racket-test
 
 
 .PHONY: test lint racket-lint racket-format racket-format-fix racket-test

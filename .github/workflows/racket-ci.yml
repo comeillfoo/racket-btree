@@ -1,0 +1,38 @@
+# Default Racket CI
+
+name: racket-btree
+
+on: [push, pull_request]
+
+
+jobs:
+  static-dynamic-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Racket
+        uses: Bogdanp/setup-racket@v1.8.1
+        with:
+          architecture: 'x64'  # or: 'x64', 'x86', 'arm32', 'arm64' (or 'aarch64')
+          distribution: 'full' # or: 'minimal' (but you probably don't want 'minimal', see note at the bottom of this doc)
+          variant: 'CS'        # or: 'BC' for Racket Before Chez
+          version: '8.5'
+      - name: Setup Racket Formatter - racket-fmt
+        run: raco pkg install --deps search-auto fmt
+      - name: Setup Racket Linter - racket-review
+        run: raco pkg install --deps search-auto review
+      - name: Caching Racket Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            /usr/share/racket/pkgs
+            ~/.local/share/racket/8.5/pkgs
+          key: ${{ runner.os }}-racket-${{ hashFiles('/share/pkgs/pkgs.rktd') }}
+          restore-keys: ${{ runner.os }}-racket
+      - name: Running tests with RackUnit
+        run: make racket-test
+      - name: Check Racket Scripts Formatting
+        run: make racket-format
+      - name: Linting Racket Scripts
+        run: make racket-lint
+

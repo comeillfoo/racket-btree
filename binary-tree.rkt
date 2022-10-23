@@ -129,5 +129,9 @@
       tree)))
 
 
+
+
 (module+ test
-  )
+  (require (submod ".." binary-tree) rackunit)
+  (check-equal? (binary-tree-cons (void) (void)) (void) "Property of monoid failed"))
+
