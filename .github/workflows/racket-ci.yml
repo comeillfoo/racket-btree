@@ -6,7 +6,7 @@ on: [push, pull_request]
 
 
 jobs:
-  static-dynamic-analysis:
+  main:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
