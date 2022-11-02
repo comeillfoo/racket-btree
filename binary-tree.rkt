@@ -82,17 +82,17 @@
 
   (define (binary-tree->list t)
     (if (binary-tree? t)
-        (filter (λ (x) (not (or (and (stream? x) (stream-empty? x)) (void? x)))) (stream->list t))
+        (filter (lambda (x) (not (or (and (stream? x) (stream-empty? x)) (void? x)))) (stream->list t))
         (raise-argument-error 'binary-tree->list "binary-tree?" t)))
 
   (define-syntax define-binary-tree-op
     (syntax-rules ()
       [(define-binary-tree-op op func tree)
-       (λ (func tree)
+       (lambda (func tree)
          (for/fold ([acc (void)]) ([v (op func (binary-tree->list tree))])
            (binary-tree-cons acc v)))]
       [(define-binary-tree-op op func init tree)
-       (λ (func init tree) (op func init (binary-tree->list tree)))]))
+       (lambda (func init tree) (op func init (binary-tree->list tree)))]))
 
   (define binary-tree-map (define-binary-tree-op map func tree))
 
@@ -103,7 +103,7 @@
   (define binary-tree-foldr (define-binary-tree-op foldr func init tree))
 
   (define (binary-tree-remove v tree [func equal?])
-    (binary-tree-filter (λ (node) (not (func v node))) tree)))
+    (binary-tree-filter (lambda (node) (not (func v node))) tree)))
 
 (module+ test
   (require (submod ".." binary-tree)

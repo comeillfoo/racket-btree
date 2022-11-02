@@ -160,7 +160,7 @@ __Лабораторная работа №2__
 (define (binary-tree->list t)
   (if (binary-tree? t)
     (filter
-      (λ (x) (not (or (and (stream? x) (stream-empty? x)) (void? x)))) ;;; предикат, по которому остаются только значения из дерева
+      (lambda (x) (not (or (and (stream? x) (stream-empty? x)) (void? x)))) ;;; предикат, по которому остаются только значения из дерева
       (stream->list t))
     (raise-argument-error 'binary-tree->list "binary-tree?" t)))
 ```
@@ -192,7 +192,7 @@ __Лабораторная работа №2__
 ;;; всех элементов равных `v`, поэтому реализована через `filter`
 (define (binary-tree-remove v tree [func equal?])
   (binary-tree-filter
-    (λ (node) (not (func v node)))
+    (lambda (node) (not (func v node)))
     tree)))
 ```
 `define-binary-tree-op` макрос, который разворачивается в соответствующую лямбду с алгоритмом выше.
