@@ -124,6 +124,60 @@
 (module+ test
   (require (submod ".." binary-tree))
 
+  ;;; # Unit-tests
+  (require rackunit)
+
+  ;;; ## binary-tree-cons
+  (check-equal? (binary-tree-cons (binary-tree (void) (void) (void)) (void))
+                (void)
+                "inalid tree not corrected")
+  (check-equal? (binary-tree-cons (binary-tree 1 (void) (void)) 2)
+                (binary-tree 1 2 (void))
+                "new element not in the left leaf")
+  (check-equal? (binary-tree-cons (binary-tree 1 2 (void)) 3)
+                (binary-tree 1 2 3)
+                "new element not in the right leaf")
+
+  ;;; ## binary-tree-remove
+  (check-equal? (binary-tree-remove 3 (binary-tree 1 3 3)) 1 "not all 3 removed")
+
+  (check-false
+   (member 3 (binary-tree->list (binary-tree-remove 3 (binary-tree 1 (binary-tree 3 4 5) 3))))
+   "not all 3 removed")
+
+  (check-false (member '(1 2 3)
+                       (binary-tree->list
+                        (binary-tree-remove '(1 2 3) (binary-tree '(1 2 3) (binary-tree 3 4 5) 3))))
+               "not all '(1 2 3) removed")
+
+  ;;; ## binary-tree-map
+  (check-equal? (binary-tree->list (binary-tree-map (lambda (v) (add1 v)) (binary-tree 1 2 3)))
+                '(2 3 4)
+                "not all elements increased")
+
+  (check-equal? (binary-tree->list (binary-tree-map (lambda (v) (range v)) (binary-tree 1 2 3)))
+                '((0) (0 1) (0 1 2))
+                "not all elements increased")
+
+  ;;; ## binary-tree-foldl
+  (check-equal? (binary-tree-foldl + 0 (binary-tree 2 1 (binary-tree 4 3 5)))
+                15
+                "not folded in reverse-sorted list")
+
+  ;;; ## binary-tree-foldr
+  (check-equal? (binary-tree-foldr cons '() (binary-tree 2 1 (binary-tree 4 3 5)))
+                '(5 4 3 2 1)
+                "not folded in reverse-sorted list")
+
+  ;;; ## binary-tree->list
+  (check-equal? (binary-tree->list '()) (list '()) "not correct non-tree input  handling")
+
+  (check-equal? (binary-tree->list (binary-tree (void) (void) (void))) '() "not correct non-tree input  handling")
+
+  (check-equal? (binary-tree->list (binary-tree 4 (binary-tree 2 1 3) 5))
+                '(1 2 3 4 5)
+                "not transferred inorder")
+
   ;;; # Property-based tests
   (require rackcheck)
 
@@ -178,58 +232,4 @@
 
   (check-property neutral-element-ops)
   (check-property associativity)
-  (check-property total-nodes-in-perfect-tree-the-power-of-two)
-
-  ;;; # Unit-tests
-  (require rackunit)
-
-  ;;; ## binary-tree-cons
-  (check-equal? (binary-tree-cons (binary-tree (void) (void) (void)) (void))
-                (void)
-                "inalid tree not corrected")
-  (check-equal? (binary-tree-cons (binary-tree 1 (void) (void)) 2)
-                (binary-tree 1 2 (void))
-                "new element not in the left leaf")
-  (check-equal? (binary-tree-cons (binary-tree 1 2 (void)) 3)
-                (binary-tree 1 2 3)
-                "new element not in the right leaf")
-
-  ;;; ## binary-tree-remove
-  (check-equal? (binary-tree-remove 3 (binary-tree 1 3 3)) 1 "not all 3 removed")
-
-  (check-false
-   (member 3 (binary-tree->list (binary-tree-remove 3 (binary-tree 1 (binary-tree 3 4 5) 3))))
-   "not all 3 removed")
-
-  (check-false (member '(1 2 3)
-                       (binary-tree->list
-                        (binary-tree-remove '(1 2 3) (binary-tree '(1 2 3) (binary-tree 3 4 5) 3))))
-               "not all '(1 2 3) removed")
-
-  ;;; ## binary-tree-map
-  (check-equal? (binary-tree->list (binary-tree-map (lambda (v) (add1 v)) (binary-tree 1 2 3)))
-                '(2 3 4)
-                "not all elements increased")
-
-  (check-equal? (binary-tree->list (binary-tree-map (lambda (v) (range v)) (binary-tree 1 2 3)))
-                '((0) (0 1) (0 1 2))
-                "not all elements increased")
-
-  ;;; ## binary-tree-foldl
-  (check-equal? (binary-tree-foldl + 0 (binary-tree 2 1 (binary-tree 4 3 5)))
-                15
-                "not folded in reverse-sorted list")
-
-  ;;; ## binary-tree-foldr
-  (check-equal? (binary-tree-foldr cons '() (binary-tree 2 1 (binary-tree 4 3 5)))
-                '(5 4 3 2 1)
-                "not folded in reverse-sorted list")
-
-  ;;; ## binary-tree->list
-  (check-equal? (binary-tree->list '()) (list '()) "not correct non-tree input  handling")
-
-  (check-equal? (binary-tree->list (binary-tree (void) (void) (void))) '() "not correct non-tree input  handling")
-
-  (check-equal? (binary-tree->list (binary-tree 4 (binary-tree 2 1 3) 5))
-                '(1 2 3 4 5)
-                "not transferred inorder"))
+  (check-property total-nodes-in-perfect-tree-the-power-of-two))
