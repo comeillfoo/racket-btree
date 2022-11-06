@@ -21,6 +21,8 @@ jobs:
         run: raco pkg install --deps search-auto fmt
       - name: Setup Racket Linter - racket-review
         run: raco pkg install --deps search-auto review
+      - name: Setup RackCheck - rackcheck
+        run: raco pkg install --deps search-auto rackcheck
       - name: Caching Racket Dependencies
         uses: actions/cache@v3
         with:
