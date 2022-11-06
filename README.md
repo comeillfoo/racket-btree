@@ -204,6 +204,11 @@ __Лабораторная работа №2__
   (binary-tree-filter
     (lambda (node) (not (func v node)))
     tree)))
+
+(define (binary-tree-height tree)
+  (if (binary-tree? tree)
+    (bt-height tree)
+    1)))
 ```
 
 ## Тесты, отчет инструмента тестирования, метрики
@@ -294,24 +299,21 @@ __Лабораторная работа №2__
     (binary-tree-cons a (binary-tree-cons b c))))
 
 ;;; 3. total number of nodes in a perfect tree of height h is 2^(h + 1) - 1
-(define (gen:perfect-binary-tree #:max-length [max-len 128])
-  (gen:let
-    ([lst
-      (gen:let ([h (gen:integer-in 1 6)])
-        (gen:resize
-          (gen:list gen:natural #:max-length max-len)
-          (sub1 (expt 2 (add1 h)))))])
-    (for/fold
-      ([tree (void)])
-      ([el lst])
-      (binary-tree-cons tree el))))
+(define gen:perfect-binary-tree
+  (gen:let ([lst
+              (gen:let ([h (gen:integer-in 1 6)])
+                      (make-list (sub1 (* 2 h)) #t))])
+            (for/fold ([tree (void)]) ([el lst])
+              (binary-tree-cons tree el))))
 
 (define-property total-nodes-in-perfect-tree-the-power-of-two
-  ([perfect-tree (gen:perfect-binary-tree)])
-  (check-false
-    (member
-      (void)
-      (binary-tree->list perfect-tree))))
+  ([perfect-tree gen:perfect-binary-tree])
+  (check-equal?
+    (length (binary-tree->list perfect-tree))
+    (sub1
+      (*
+        2
+        (binary-tree-height perfect-tree)))))
 
 (check-property neutral-element-ops)
 (check-property associativity)

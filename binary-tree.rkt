@@ -115,7 +115,16 @@
       (func t acc)))
 
   (define (binary-tree-remove v tree [func equal?])
-    (binary-tree-filter (lambda (node) (not (func v node))) tree)))
+    (binary-tree-filter (lambda (node) (not (func v node))) tree))
+
+  (define (bt-height tree)
+    (if (binary-tree? tree)
+        (add1 (max (binary-tree-height (binary-tree-left tree))
+                   (binary-tree-height (binary-tree-right tree))))
+        0))
+
+  (define (binary-tree-height tree)
+    (if (binary-tree? tree) (bt-height tree) 1)))
 
 (module+ test
   (require (submod ".." binary-tree))
@@ -199,18 +208,16 @@
                    (check-equal? (binary-tree-cons (binary-tree-cons a b) c)
                                  (binary-tree-cons a (binary-tree-cons b c))))
 
-  ;;; 3. total number of nodes in a perfect tree of height h is 2^(h + 1) - 1
-  (define (gen:perfect-binary-tree #:max-length [max-len 128])
-    (gen:let ([lst
-               (gen:let ([h (gen:integer-in 1 6)])
-                        (gen:resize (gen:list gen:natural #:max-length max-len)
-                                    (sub1 (expt 2 (add1 h)))))])
+  ;;; 3. total number of nodes in a perfect tree of height h is 2^(h - 1) + 1
+  (define gen:perfect-binary-tree
+    (gen:let ([lst (gen:let ([h (gen:integer-in 1 6)]) (make-list (sub1 (* 2 h)) #t))])
              (for/fold ([tree (void)]) ([el lst])
                (binary-tree-cons tree el))))
 
   (define-property total-nodes-in-perfect-tree-the-power-of-two
-                   ([perfect-tree (gen:perfect-binary-tree)])
-                   (check-false (member (void) (binary-tree->list perfect-tree))))
+                   ([perfect-tree gen:perfect-binary-tree])
+                   (check-equal? (length (binary-tree->list perfect-tree))
+                                 (sub1 (* 2 (binary-tree-height perfect-tree)))))
 
   (check-property neutral-element-ops)
   (check-property associativity)
