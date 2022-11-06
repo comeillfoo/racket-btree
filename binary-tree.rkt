@@ -65,15 +65,15 @@
           [(list #t #f #t) (binary-tree (binary-tree-left tree) (void) (void))]
           [(list #t #t #f) (binary-tree (binary-tree-right tree) (void) (void))]
           [(list #f #t #t) (binary-tree-data tree)]
-          [(list  _  _  _) tree])
+          [(list _ _ _) tree])
         tree))
 
   (define (bt-cons tree [subtree (void)])
     (cond
       [(not (binary-tree? tree))
        (if (and (binary-tree? subtree) (void? (binary-tree-right subtree)))
-          (binary-tree tree (binary-tree-data subtree) (binary-tree-left subtree))
-          (binary-tree tree subtree (void)))]
+           (binary-tree tree (binary-tree-data subtree) (binary-tree-left subtree))
+           (binary-tree tree subtree (void)))]
 
       [(void? (binary-tree-left tree))
        (binary-tree (binary-tree-data tree) subtree (binary-tree-right tree))]
@@ -90,17 +90,13 @@
     (match (list (void? a) (void? d))
       [(list #t #f) (bt-transform d)]
       [(list #f #t) (bt-transform a)]
-      [(list  _  _)
-        (bt-transform
-          (bt-cons (bt-transform a) (bt-transform d)))]))
+      [(list _ _) (bt-transform (bt-cons (bt-transform a) (bt-transform d)))]))
 
   (define (binary-tree->list tree)
     (if (binary-tree? tree)
         (for/list ([t tree])
           t)
-        (if (void? tree)
-          null
-          (list tree))))
+        (if (void? tree) null (list tree))))
 
   (define (binary-tree-map func tree)
     (for/fold ([acc (void)]) ([t tree])
@@ -172,7 +168,9 @@
   ;;; ## binary-tree->list
   (check-equal? (binary-tree->list '()) (list '()) "not correct non-tree input  handling")
 
-  (check-equal? (binary-tree->list (binary-tree (void) (void) (void))) '() "not correct non-tree input  handling")
+  (check-equal? (binary-tree->list (binary-tree (void) (void) (void)))
+                '()
+                "not correct non-tree input  handling")
 
   (check-equal? (binary-tree->list (binary-tree 4 (binary-tree 2 1 3) 5))
                 '(1 2 3 4 5)
@@ -182,53 +180,37 @@
   (require rackcheck)
 
   (define (gen:binary-tree #:max-length [max-len 128])
-    (gen:let
-      ([lst
-        (gen:list gen:natural #:max-length max-len)])
-      (for/fold
-        ([tree (void)])
-        ([el lst])
-        (binary-tree-cons tree el))))
+    (gen:let ([lst (gen:list gen:natural #:max-length max-len)])
+             (for/fold ([tree (void)]) ([el lst])
+               (binary-tree-cons tree el))))
 
   ;;; 1. testing operations with the neutral element
   (define-property neutral-element-ops
-    ([tree (gen:binary-tree)])
-    (check-equal? (binary-tree-cons tree (void)) tree)
-    (check-equal? (binary-tree-cons (void) tree) tree))
+                   ([tree (gen:binary-tree)])
+                   (check-equal? (binary-tree-cons tree (void)) tree)
+                   (check-equal? (binary-tree-cons (void) tree) tree))
 
   ;;; 2. testing associativity
   (define (gen:list-or-natural #:max-length [max-len 128])
-    (gen:choice
-      gen:natural
-      (gen:list gen:natural #:max-length max-len)))
+    (gen:choice gen:natural (gen:list gen:natural #:max-length max-len)))
 
   (define-property associativity
-    ([a (gen:list-or-natural)]
-     [b (gen:list-or-natural)]
-     [c (gen:list-or-natural)])
-    (check-equal?
-      (binary-tree-cons (binary-tree-cons a b) c)
-      (binary-tree-cons a (binary-tree-cons b c))))
+                   ([a (gen:list-or-natural)] [b (gen:list-or-natural)] [c (gen:list-or-natural)])
+                   (check-equal? (binary-tree-cons (binary-tree-cons a b) c)
+                                 (binary-tree-cons a (binary-tree-cons b c))))
 
   ;;; 3. total number of nodes in a perfect tree of height h is 2^(h + 1) - 1
   (define (gen:perfect-binary-tree #:max-length [max-len 128])
-    (gen:let
-      ([lst
-        (gen:let ([h (gen:integer-in 1 6)])
-          (gen:resize
-            (gen:list gen:natural #:max-length max-len)
-            (sub1 (expt 2 (add1 h)))))])
-      (for/fold
-        ([tree (void)])
-        ([el lst])
-        (binary-tree-cons tree el))))
+    (gen:let ([lst
+               (gen:let ([h (gen:integer-in 1 6)])
+                        (gen:resize (gen:list gen:natural #:max-length max-len)
+                                    (sub1 (expt 2 (add1 h)))))])
+             (for/fold ([tree (void)]) ([el lst])
+               (binary-tree-cons tree el))))
 
   (define-property total-nodes-in-perfect-tree-the-power-of-two
-    ([perfect-tree (gen:perfect-binary-tree)])
-    (check-false
-      (member
-        (void)
-        (binary-tree->list perfect-tree))))
+                   ([perfect-tree (gen:perfect-binary-tree)])
+                   (check-false (member (void) (binary-tree->list perfect-tree))))
 
   (check-property neutral-element-ops)
   (check-property associativity)
