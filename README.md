@@ -42,7 +42,7 @@ __Лабораторная работа №2__
 
 ### Код структуры
 
-```
+```racket
 (struct binary-tree (data left right)
   #:transparent
   #:property prop:sequence   ; структура умеет работать как последовательность
@@ -50,7 +50,7 @@ __Лабораторная работа №2__
 ```
 
 Логика для обхода структуры переехала в другую структура, названную итератором. Здесь 
-```
+```racket
 (struct binary-tree-iterator (left root right)
   #:transparent
   #:methods gen:stream
@@ -116,7 +116,7 @@ __Лабораторная работа №2__
 ### Код добавления нового узла в дерево или поддерева
 
 Функция обертка, которая обеспечивает свойство $e\cdot x = x$ и $x\cdot e = x$.
-```
+```racket
 (define (binary-tree-cons a d)
   (match (list (void? a) (void? d))
     [(list #t #f) (bt-transform d)]
@@ -127,7 +127,7 @@ __Лабораторная работа №2__
 ```
 
 Функция `bt-transform` (не экспортируется) нужна только, чтобы исправлять невалидные конфигурации дерева, наподобие `(binary-tree (void) (void) (void)) => #<void>`
-```
+```racket
 (define (bt-transform tree)
   (if (binary-tree? tree)
       (match (list (void? (binary-tree-data tree))
@@ -142,7 +142,7 @@ __Лабораторная работа №2__
 ```
 
 Логика добавления сокрыта в `bt-cons` (не экспортируется):
-```
+```racket
 ;;; subtree по умолчанию #<void>
 (define (bt-cons tree [subtree (void)])
   (cond
@@ -166,7 +166,7 @@ __Лабораторная работа №2__
 ### Дополнительные функции
 
 Вспомогательная функция, которая преобразует дерево в список.
-```
+```racket
 (define (binary-tree->list tree)
   (if (binary-tree? tree)
       (for/list ([t tree])
@@ -179,7 +179,7 @@ __Лабораторная работа №2__
 ### Требуемые операции
 
 
-```
+```racket
 (define (binary-tree-map func tree)
   (for/fold ([acc (void)]) ([t tree])
     (binary-tree-cons acc (func t))))
@@ -213,7 +213,7 @@ __Лабораторная работа №2__
 
 ## Тесты, отчет инструмента тестирования, метрики
 
-```
+```racket
 ;;; # Unit-tests
 
 ;;; ## binary-tree-cons
@@ -321,7 +321,7 @@ __Лабораторная работа №2__
 ```
 
 В отчет инструмента тестирования попало 3 вида property-based тестов по 100 в каждом тестовых случаем, и 13 unit-тестов. Итого 16
-```
+```bash
 raco test: (submod "./binary-tree.rkt" test)
   ✓ property neutral-element-ops passed 100 tests.
   ✓ property associativity passed 100 tests.
