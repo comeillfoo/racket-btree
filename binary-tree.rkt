@@ -2,7 +2,14 @@
 #lang racket
 
 (module+ binary-tree
-  (provide (except-out (all-defined-out) bt-cons bt-transform bt-list bt-equal? bt-hash bt-hash2 bt-height))
+  (provide (except-out (all-defined-out)
+                       bt-cons
+                       bt-transform
+                       bt-list
+                       bt-equal?
+                       bt-hash
+                       bt-hash2
+                       bt-height))
 
   (struct binary-tree-iterator (left root right)
     #:transparent
@@ -52,12 +59,11 @@
         (raise-argument-error 'make-binary-tree-iterator "binary-tree?" btree)))
 
   (define (bt-list tree)
-    (for/list ([leaf tree]) leaf))
+    (for/list ([leaf tree])
+      leaf))
 
   (define (bt-equal? a b recursive-equal?)
-    (equal?
-      (sort (bt-list a) <)
-      (sort (bt-list b) <)))
+    (equal? (sort (bt-list a) <) (sort (bt-list b) <)))
 
   (define (bt-hash tree recursive-equal-hash)
     (abs (foldl - 0 (flatten (bt-list tree)))))
@@ -65,17 +71,15 @@
   (define (bt-hash2 tree recursive-equal-hash)
     (abs (foldr - 0 (flatten (bt-list tree)))))
 
-  
   (struct binary-tree (data left right)
     #:transparent
-    #:property prop:sequence   make-binary-tree-iterator
-    #:property prop:equal+hash (list bt-equal? bt-hash bt-hash2))
-
+    #:property prop:sequence
+    make-binary-tree-iterator
+    #:property prop:equal+hash
+    (list bt-equal? bt-hash bt-hash2))
 
   (define (binary-tree->list tree)
-    (if (binary-tree? tree)
-        (bt-list tree)
-        (if (void? tree) null (list tree))))
+    (if (binary-tree? tree) (bt-list tree) (if (void? tree) null (list tree))))
 
   (define (bt-transform tree)
     (if (binary-tree? tree)
