@@ -45,8 +45,28 @@ __Лабораторная работа №2__
 ```racket
 (struct binary-tree (data left right)
   #:transparent
-  #:property prop:sequence   ; структура умеет работать как последовательность
-  make-binary-tree-iterator) ; указываем функцию для создания итератора над деревом
+  #:property prop:sequence   make-binary-tree-iterator
+  #:property prop:equal+hash (list bt-equal? bt-hash bt-hash2))
+
+(define (bt-equal? a b recursive-equal?)
+  (equal?
+    (sort (bt-list a) <)
+    (sort (bt-list b) <)))
+
+;;; функции для хешей в данной лабораторной не очень нужны, поэтому я над ними не запаривался особо
+(define (bt-hash tree recursive-equal-hash)
+  (abs
+    (foldl
+      -
+      0
+      (flatten (bt-list tree)))))
+
+(define (bt-hash2 tree recursive-equal-hash)
+  (abs
+    (foldr
+      -
+      0
+      (flatten (bt-list tree)))))
 ```
 
 Логика для обхода структуры переехала в другую структуру -- итератор. 
@@ -169,8 +189,7 @@ __Лабораторная работа №2__
 ```racket
 (define (binary-tree->list tree)
   (if (binary-tree? tree)
-      (for/list ([t tree])
-        t)
+      (bt-list tree)
       (if (void? tree)
         null
         (list tree))))

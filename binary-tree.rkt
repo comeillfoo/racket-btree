@@ -2,7 +2,7 @@
 #lang racket
 
 (module+ binary-tree
-  (provide (except-out (all-defined-out) bt-cons bt-transform))
+  (provide (except-out (all-defined-out) bt-cons bt-transform bt-list bt-equal? bt-hash bt-hash2 bt-height))
 
   (struct binary-tree-iterator (left root right)
     #:transparent
@@ -51,10 +51,31 @@
                               (binary-tree-right btree))
         (raise-argument-error 'make-binary-tree-iterator "binary-tree?" btree)))
 
+  (define (bt-list tree)
+    (for/list ([leaf tree]) leaf))
+
+  (define (bt-equal? a b recursive-equal?)
+    (equal?
+      (sort (bt-list a) <)
+      (sort (bt-list b) <)))
+
+  (define (bt-hash tree recursive-equal-hash)
+    (abs (foldl - 0 (flatten (bt-list tree)))))
+
+  (define (bt-hash2 tree recursive-equal-hash)
+    (abs (foldr - 0 (flatten (bt-list tree)))))
+
+  
   (struct binary-tree (data left right)
     #:transparent
-    #:property prop:sequence
-    make-binary-tree-iterator)
+    #:property prop:sequence   make-binary-tree-iterator
+    #:property prop:equal+hash (list bt-equal? bt-hash bt-hash2))
+
+
+  (define (binary-tree->list tree)
+    (if (binary-tree? tree)
+        (bt-list tree)
+        (if (void? tree) null (list tree))))
 
   (define (bt-transform tree)
     (if (binary-tree? tree)
@@ -91,12 +112,6 @@
       [(list #t #f) (bt-transform d)]
       [(list #f #t) (bt-transform a)]
       [(list _ _) (bt-transform (bt-cons (bt-transform a) (bt-transform d)))]))
-
-  (define (binary-tree->list tree)
-    (if (binary-tree? tree)
-        (for/list ([t tree])
-          t)
-        (if (void? tree) null (list tree))))
 
   (define (binary-tree-map func tree)
     (for/fold ([acc (void)]) ([t tree])
@@ -200,11 +215,11 @@
                    (check-equal? (binary-tree-cons (void) tree) tree))
 
   ;;; 2. testing associativity
-  (define (gen:list-or-natural #:max-length [max-len 128])
-    (gen:choice gen:natural (gen:list gen:natural #:max-length max-len)))
+  ;;; (define (gen:list-or-natural #:max-length [max-len 128])
+  ;;;   (gen:choice gen:natural (gen:list gen:natural #:max-length max-len)))
 
   (define-property associativity
-                   ([a (gen:list-or-natural)] [b (gen:list-or-natural)] [c (gen:list-or-natural)])
+                   ([a (gen:binary-tree)] [b (gen:binary-tree)] [c (gen:binary-tree)])
                    (check-equal? (binary-tree-cons (binary-tree-cons a b) c)
                                  (binary-tree-cons a (binary-tree-cons b c))))
 
